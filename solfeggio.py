@@ -71,7 +71,7 @@ def GenerateForMinor(base, filename):
         generator.add_pause()
 
     for i in range(1, 1000):
-        generator.add_pattern(base, major_singings[random.randint(0, len(major_singings) - 1)])
+        generator.add_pattern(base, minor_singings[random.randint(0, len(major_singings) - 1)])
         generator.add_pause()
 
     generator.write(filename)
