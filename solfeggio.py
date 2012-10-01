@@ -123,7 +123,7 @@ def GenerateRandomSingings(base, preparations, patterns, filename):
 
     generator.write(filename)
 
-def GenerateRandomSequences(base, preparations, patterns, filename, length):
+def GenerateRandomSequences(base, preparations, patterns, filename, length, pause = 1):
     generator = Generator()
 
     AddPreparations(generator, base, preparations)
@@ -133,7 +133,7 @@ def GenerateRandomSequences(base, preparations, patterns, filename, length):
 
         for pattern in chosen_patterns:
             generator.add_pattern(base, pattern[0:1])
-            generator.add_pause()
+            generator.add_pause(pause)
 
         generator.add_pause(2)
 
@@ -161,5 +161,7 @@ for key in KEYS:
     GenerateCircles(base, circles, name + "_01_circles.mid")
     GenerateRandomSingings(base, preparations, patterns, name + "_02_singings_random.mid")
     GenerateRandomSequences(base, preparations, patterns, name + "_03_sequences_random_2.mid", 2)
+    GenerateRandomSequences(base, preparations, patterns, name + "_03_sequences_random_2_nopause.mid", 2, 0)
     GenerateRandomSequences(base, preparations, patterns, name + "_04_sequences_random_3.mid", 3)
+    GenerateRandomSequences(base, preparations, patterns, name + "_04_sequences_random_3_nopause.mid", 3, 0)
 
