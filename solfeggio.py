@@ -89,6 +89,11 @@ class Generator:
         for item in pattern:
             self.add_note(base + item[0], item[1])
 
+    def add_chord(self, base, notes, length = 1):
+        for note in notes:
+            self.midi_file.addNote(0, 0, base + note, self.current_time, length, 100)
+        self.add_pause(length)
+
     def write(self, filename):
         output_file = open(filename, 'wb')
         self.midi_file.writeFile(output_file)
@@ -142,7 +147,7 @@ def GenerateRandomSequences(base, preparations, patterns, filename, length, paus
 
     generator.write(filename)
 
-def GenerateSingRandomIntervals(base, preparations, patterns, filename, tasks = 500, repeats = 10):
+def GenerateSingRandomIntervals(base, preparations, patterns, filename, tasks = 200, repeats = 10):
     generator = Generator()
 
     AddPreparations(generator, base, preparations)
@@ -153,6 +158,33 @@ def GenerateSingRandomIntervals(base, preparations, patterns, filename, tasks = 
         for pattern in sampled_patterns:
             generator.add_pattern(base, pattern)
             generator.add_pause(2)
+
+        for pattern in sampled_patterns:
+            for j in range(0, repeats):
+                generator.add_pattern(base, pattern[0:1])
+                generator.add_pause(1)
+
+        generator.add_pause(4)
+
+    generator.write(filename)
+
+def GenerateFindRandomHarmonicIntervals(base, preparations, patterns, filename, tasks = 200, repeats = 3):
+    generator = Generator()
+
+    AddPreparations(generator, base, preparations)
+
+    for i in range(0, tasks):
+        sampled_patterns = random.sample(patterns, 2)
+
+        notes = [pattern[0][0] for pattern in sampled_patterns]
+
+        for j in range(0, repeats):
+            generator.add_chord(base, notes, 2)
+            generator.add_pause(1)
+
+        for j in range(0, repeats):
+            generator.add_pattern(base, pattern[0:1])
+            generator.add_pause(1)
 
         for pattern in sampled_patterns:
             generator.add_pattern(base, pattern[0:1])
@@ -187,3 +219,7 @@ for key in KEYS:
     GenerateSingRandomIntervals(base, preparations, patterns, name + ("_%02d_intervals_sing_pt2.mid" % track))
     track = track + 1
 
+    GenerateFindRandomHarmonicIntervals(base, preparations, patterns, name + ("_%02d_harmonic_intervals_find_pt1.mid" % track))
+    track = track + 1
+    GenerateFindRandomHarmonicIntervals(base, preparations, patterns, name + ("_%02d_harmonic_intervals_find_pt2.mid" % track))
+    track = track + 1
