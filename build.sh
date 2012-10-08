@@ -14,7 +14,7 @@ do
 
     m=`echo $i | sed 's/.mid/.mp3/i'`
     rm -f $m
-    lame --preset extreme $w $m
+    lame --preset standard $w $m
 
     rm $w
 done
