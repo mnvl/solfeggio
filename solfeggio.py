@@ -5,15 +5,12 @@ from midiutil.MidiFile import MIDIFile
 
 TEMPO = 120
 PREPARATIONS_REPEATS = 3
-CIRCLES_TASKS = 100
-RANDOM_SINGINGS_TASKS = 500
-RANDOM_SEQUENCES_TASKS = 500
 
 MAJOR_PREPARATIONS = [
     [[0, 2.0], [4, 2.0], [7, 2.0], [12, 2.0], [7, 2.0], [4, 2.0], [0, 4.0]],
 ]
 
-MAJOR_SINGINGS = [
+MAJOR_RUNS = [
     [[0, 2.0]],
     [[2, 2.0], [0, 2.0]],
     [[4, 2.0], [2, 1.0], [0, 2.0]],
@@ -34,14 +31,14 @@ MAJOR_CIRCLES = [
     [[7, 2.0], [5, 1.0], [9, 1.0], [7, 2.0]],
 ]
 
-MAJOR_PREPARATIONS.extend(MAJOR_SINGINGS)
+MAJOR_PREPARATIONS.extend(MAJOR_RUNS)
 MAJOR_PREPARATIONS.extend(MAJOR_CIRCLES)
 
 MINOR_PREPARATIONS = [
     [[0, 2.0], [3, 2.0], [7, 2.0], [12, 2.0], [7, 2.0], [3, 2.0], [0, 4.0]],
 ]
 
-MINOR_SINGINGS = [
+MINOR_RUNS = [
     [[0, 2.0]],
     [[2, 2.0], [0, 2.0]],
     [[3, 2.0], [2, 1.0], [0, 2.0]],
@@ -64,13 +61,13 @@ MINOR_CIRCLES = [
     [[7, 2.0], [5, 1.0], [8, 1.0], [7, 2.0]],
 ]
 
-MINOR_PREPARATIONS.extend(MINOR_SINGINGS)
+MINOR_PREPARATIONS.extend(MINOR_RUNS)
 MINOR_PREPARATIONS.extend(MINOR_CIRCLES)
 
 KEYS = [
-    [ "C-major", 48, MAJOR_PREPARATIONS, MAJOR_SINGINGS, MAJOR_CIRCLES ],
-    [ "G-major", 43, MAJOR_PREPARATIONS, MAJOR_SINGINGS, MAJOR_CIRCLES ],
-    [ "A-minor", 45, MINOR_PREPARATIONS, MINOR_SINGINGS, MINOR_CIRCLES ],
+    [ "C-major", 48, MAJOR_PREPARATIONS, MAJOR_RUNS, MAJOR_CIRCLES ],
+    [ "G-major", 43, MAJOR_PREPARATIONS, MAJOR_RUNS, MAJOR_CIRCLES ],
+    [ "A-minor", 45, MINOR_PREPARATIONS, MINOR_RUNS, MINOR_CIRCLES ],
 ]
 
 class Generator:
@@ -103,12 +100,12 @@ def AddPreparations(generator, base, preparations):
             generator.add_pattern(base, preparation)
             generator.add_pause(2)
 
-def GenerateRandomSingings(base, preparations, patterns, filename):
+def GenerateRandomRuns(base, preparations, patterns, filename, tasks = 500):
     generator = Generator()
 
     AddPreparations(generator, base, preparations)
 
-    for i in range(0, RANDOM_SINGINGS_TASKS):
+    for i in range(0, tasks):
         pattern = random.choice(patterns)
         if len(pattern) > 1:
             generator.add_pattern(base, pattern[0:1])
@@ -123,13 +120,13 @@ def GenerateRandomSingings(base, preparations, patterns, filename):
 
     generator.write(filename)
 
-def GenerateRandomSequences(base, preparations, patterns, filename, length, pause = 1):
+def GenerateRandomSequences(base, preparations, patterns, filename, length, pause = 1, tasks = 500):
     generator = Generator()
 
     AddPreparations(generator, base, preparations)
 
-    for i in range(0, RANDOM_SEQUENCES_TASKS):
-        chosen_patterns = random.sample(patterns, length)
+    for i in range(0, tasks):
+        chosen_patterns = [random.choice(patterns) for i in range(0, length)]
 
         for pattern in chosen_patterns:
             generator.add_pattern(base, pattern[0:1])
@@ -145,23 +142,48 @@ def GenerateRandomSequences(base, preparations, patterns, filename, length, paus
 
     generator.write(filename)
 
-def GenerateCircles(base, circles, filename):
+def GenerateSingRandomIntervals(base, preparations, patterns, filename, tasks = 500, repeats = 10):
     generator = Generator()
 
-    for i in range(0, CIRCLES_TASKS):
-        for circle in circles:
-            generator.add_pattern(base, circle)
+    AddPreparations(generator, base, preparations)
+
+    for i in range(0, tasks):
+        sampled_patterns = random.sample(patterns, 2)
+
+        for pattern in sampled_patterns:
+            generator.add_pattern(base, pattern)
             generator.add_pause(2)
+
+        for pattern in sampled_patterns:
+            generator.add_pattern(base, pattern[0:1])
+            generator.add_pause(1)
+
+        generator.add_pause(4)
 
     generator.write(filename)
 
 for key in KEYS:
     [name, base, preparations, patterns, circles] = key
 
-    GenerateCircles(base, circles, name + "_01_circles.mid")
-    GenerateRandomSingings(base, preparations, patterns, name + "_02_singings_random.mid")
-    GenerateRandomSequences(base, preparations, patterns, name + "_03_sequences_random_2.mid", 2)
-    GenerateRandomSequences(base, preparations, patterns, name + "_03_sequences_random_2_nopause.mid", 2, 0)
-    GenerateRandomSequences(base, preparations, patterns, name + "_04_sequences_random_3.mid", 3)
-    GenerateRandomSequences(base, preparations, patterns, name + "_04_sequences_random_3_nopause.mid", 3, 0)
+    track = 1
+
+    GenerateRandomRuns(base, preparations, patterns, name + ("_%02d_runs_random.mid" % track))
+    track = track + 1
+    GenerateRandomSequences(base, preparations, patterns, name + ("_%02d_sequences_random_2.mid" % track), 2)
+    track = track + 1
+    GenerateRandomSequences(base, preparations, patterns, name + ("_%02d_sequences_random_2_nopause.mid" % track), 2, 0)
+    track = track + 1
+    GenerateRandomSequences(base, preparations, patterns, name + ("_%02d_sequences_random_3.mid" % track), 3)
+    track = track + 1
+    GenerateRandomSequences(base, preparations, patterns, name + ("_%02d_sequences_random_3_nopause.mid" % track), 3, 0)
+    track = track + 1
+    GenerateRandomSequences(base, preparations, patterns, name + ("_%02d_sequences_random_5_nopause.mid" % track), 5, 0, 300)
+    track = track + 1
+    GenerateRandomSequences(base, preparations, patterns, name + ("_%02d_sequences_random_10_nopause.mid" % track), 10, 0, 200)
+    track = track + 1
+
+    GenerateSingRandomIntervals(base, preparations, patterns, name + ("_%02d_intervals_sing_pt1.mid" % track))
+    track = track + 1
+    GenerateSingRandomIntervals(base, preparations, patterns, name + ("_%02d_intervals_sing_pt2.mid" % track))
+    track = track + 1
 
