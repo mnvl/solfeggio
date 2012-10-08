@@ -3,7 +3,6 @@
 import random
 from midiutil.MidiFile import MIDIFile
 
-TEMPO = 120
 PREPARATIONS_REPEATS = 3
 
 MAJOR_PREPARATIONS = [
@@ -18,6 +17,13 @@ MAJOR_RUNS = [
     [[7, 2.0], [9, 1.0], [11, 1.0], [12, 2.0]],
     [[9, 2.0], [11, 1.0], [12, 2.0]],
     [[11, 2.0], [12, 2.0]],
+    [[12, 2.0]],
+]
+
+MAJOR_MAIN_RUNS = [
+    [[0, 2.0]],
+    [[4, 2.0], [2, 1.0], [0, 2.0]],
+    [[7, 2.0], [9, 1.0], [11, 1.0], [12, 2.0]],
     [[12, 2.0]],
 ]
 
@@ -51,6 +57,13 @@ MINOR_RUNS = [
     [[10, 2.0], [12, 2.0]],
 ]
 
+MINOR_MAIN_RUNS = [
+    [[0, 2.0]],
+    [[3, 2.0], [2, 1.0], [0, 2.0]],
+    [[7, 2.0], [9, 1.0], [11, 1.0], [12, 2.0]],
+    [[12, 2.0]],
+]
+
 MINOR_CIRCLES = [
     [[0, 2.0], [2, 1.0], [-1, 1.0], [0, 2.0]],
     [[3, 2.0], [5, 1.0], [2, 1.0], [3, 2.0]],
@@ -65,16 +78,16 @@ MINOR_PREPARATIONS.extend(MINOR_RUNS)
 MINOR_PREPARATIONS.extend(MINOR_CIRCLES)
 
 KEYS = [
-    [ "C-major", 48, MAJOR_PREPARATIONS, MAJOR_RUNS, MAJOR_CIRCLES ],
-    [ "G-major", 43, MAJOR_PREPARATIONS, MAJOR_RUNS, MAJOR_CIRCLES ],
-    [ "A-minor", 45, MINOR_PREPARATIONS, MINOR_RUNS, MINOR_CIRCLES ],
+    [ "C-major", 48, MAJOR_PREPARATIONS, MAJOR_RUNS, MAJOR_MAIN_RUNS, MAJOR_CIRCLES ],
+    [ "G-major", 43, MAJOR_PREPARATIONS, MAJOR_RUNS, MAJOR_MAIN_RUNS, MAJOR_CIRCLES ],
+    [ "A-minor", 45, MINOR_PREPARATIONS, MINOR_RUNS, MINOR_MAIN_RUNS, MINOR_CIRCLES ],
 ]
 
 class Generator:
-    def __init__(self):
+    def __init__(self, tempo = 120):
         self.midi_file = MIDIFile(1)
         self.midi_file.addTrackName(0, 0, "track")
-        self.midi_file.addTempo(0, 0, TEMPO)
+        self.midi_file.addTempo(0, 0, tempo)
 
         self.current_time = 1
 
@@ -157,19 +170,22 @@ def GenerateSingRandomIntervals(base, preparations, patterns, filename, tasks = 
 
         for pattern in sampled_patterns:
             generator.add_pattern(base, pattern)
-            generator.add_pause(2)
+            generator.add_pause(1)
 
-        for pattern in sampled_patterns:
-            for j in range(0, repeats):
+        generator.add_pause(2)
+
+        for j in range(0, repeats):
+            for pattern in sampled_patterns:
                 generator.add_pattern(base, pattern[0:1])
-                generator.add_pause(1)
+
+            generator.add_pause(1)
 
         generator.add_pause(4)
 
     generator.write(filename)
 
 def GenerateFindRandomHarmonicIntervals(base, preparations, patterns, filename, tasks = 200, repeats = 3):
-    generator = Generator()
+    generator = Generator(80)
 
     AddPreparations(generator, base, preparations)
 
@@ -179,15 +195,29 @@ def GenerateFindRandomHarmonicIntervals(base, preparations, patterns, filename, 
         notes = [pattern[0][0] for pattern in sampled_patterns]
 
         for j in range(0, repeats):
-            generator.add_chord(base, notes, 2)
+            generator.add_chord(base, notes, 3)
             generator.add_pause(1)
+
+        generator.add_pause(2)
 
         for j in range(0, repeats):
-            generator.add_pattern(base, pattern[0:1])
+            for pattern in sampled_patterns:
+                generator.add_pattern(base, pattern[0:1])
+
             generator.add_pause(1)
 
+        generator.add_pause(2)
+
+        for j in range(0, repeats):
+            for pattern in reversed(sampled_patterns):
+                generator.add_pattern(base, pattern[0:1])
+
+            generator.add_pause(1)
+
+        generator.add_pause(2)
+
         for pattern in sampled_patterns:
-            generator.add_pattern(base, pattern[0:1])
+            generator.add_pattern(base, pattern)
             generator.add_pause(1)
 
         generator.add_pause(4)
@@ -195,7 +225,7 @@ def GenerateFindRandomHarmonicIntervals(base, preparations, patterns, filename, 
     generator.write(filename)
 
 for key in KEYS:
-    [name, base, preparations, patterns, circles] = key
+    [name, base, preparations, patterns, main_patterns, circles] = key
 
     track = 1
 
@@ -214,12 +244,22 @@ for key in KEYS:
     GenerateRandomSequences(base, preparations, patterns, name + ("_%02d_sequences_random_10_nopause.mid" % track), 10, 0, 200)
     track = track + 1
 
-    GenerateSingRandomIntervals(base, preparations, patterns, name + ("_%02d_intervals_sing_pt1.mid" % track))
+    GenerateSingRandomIntervals(base, preparations, main_patterns, name + ("_%02d_intervals_sing_simple_pt1.mid" % track))
     track = track + 1
-    GenerateSingRandomIntervals(base, preparations, patterns, name + ("_%02d_intervals_sing_pt2.mid" % track))
+    GenerateSingRandomIntervals(base, preparations, main_patterns, name + ("_%02d_intervals_sing_simple_pt2.mid" % track))
     track = track + 1
 
-    GenerateFindRandomHarmonicIntervals(base, preparations, patterns, name + ("_%02d_harmonic_intervals_find_pt1.mid" % track))
+    GenerateSingRandomIntervals(base, preparations, patterns, name + ("_%02d_intervals_sing_hard_pt1.mid" % track))
     track = track + 1
-    GenerateFindRandomHarmonicIntervals(base, preparations, patterns, name + ("_%02d_harmonic_intervals_find_pt2.mid" % track))
+    GenerateSingRandomIntervals(base, preparations, patterns, name + ("_%02d_intervals_sing_hard_pt2.mid" % track))
+    track = track + 1
+
+    GenerateFindRandomHarmonicIntervals(base, preparations, main_patterns, name + ("_%02d_harmonic_intervals_simple_find_pt1.mid" % track))
+    track = track + 1
+    GenerateFindRandomHarmonicIntervals(base, preparations, main_patterns, name + ("_%02d_harmonic_intervals_simple_find_pt2.mid" % track))
+    track = track + 1
+
+    GenerateFindRandomHarmonicIntervals(base, preparations, patterns, name + ("_%02d_harmonic_intervals_hard_find_pt1.mid" % track))
+    track = track + 1
+    GenerateFindRandomHarmonicIntervals(base, preparations, patterns, name + ("_%02d_harmonic_intervals_hard_find_pt2.mid" % track))
     track = track + 1
