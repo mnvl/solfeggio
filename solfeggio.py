@@ -6,7 +6,7 @@ from midiutil.MidiFile import MIDIFile
 PREPARATIONS_REPEATS = 3
 
 MAJOR_PREPARATIONS = [
-    [[0, 2.0], [4, 2.0], [7, 2.0], [12, 2.0], [7, 2.0], [4, 2.0], [0, 4.0]],
+    [[0, 4, 7, 2.0]],
 ]
 
 MAJOR_RUNS = [
@@ -14,10 +14,10 @@ MAJOR_RUNS = [
     [[2, 2.0], [0, 2.0]],
     [[4, 2.0], [2, 1.0], [0, 2.0]],
     [[5, 2.0], [4, 1.0], [2, 1.0], [0, 2.0]],
-    [[7, 2.0], [9, 1.0], [11, 1.0], [12, 2.0]],
-    [[9, 2.0], [11, 1.0], [12, 2.0]],
-    [[11, 2.0], [12, 2.0]],
     [[12, 2.0]],
+    [[11, 2.0], [12, 2.0]],
+    [[9, 2.0], [11, 1.0], [12, 2.0]],
+    [[7, 2.0], [9, 1.0], [11, 1.0], [12, 2.0]],
 ]
 
 MAJOR_MAIN_RUNS = [
@@ -37,11 +37,8 @@ MAJOR_CIRCLES = [
     [[7, 2.0], [5, 1.0], [9, 1.0], [7, 2.0]],
 ]
 
-MAJOR_PREPARATIONS.extend(MAJOR_RUNS)
-MAJOR_PREPARATIONS.extend(MAJOR_CIRCLES)
-
 MINOR_PREPARATIONS = [
-    [[0, 2.0], [3, 2.0], [7, 2.0], [12, 2.0], [7, 2.0], [3, 2.0], [0, 4.0]],
+    [[0, 3, 7, 2.0]],
 ]
 
 MINOR_RUNS = [
@@ -49,10 +46,10 @@ MINOR_RUNS = [
     [[2, 2.0], [0, 2.0]],
     [[3, 2.0], [2, 1.0], [0, 2.0]],
     [[5, 2.0], [3, 1.0], [2, 1.0], [0, 2.0]],
-    [[7, 2.0], [9, 1.0], [11, 1.0], [12, 2.0]],
-    [[9, 2.0], [11, 1.0], [12, 2.0]],
-    [[11, 2.0], [12, 2.0]],
     [[12, 2.0]],
+    [[11, 2.0], [12, 2.0]],
+    [[9, 2.0], [11, 1.0], [12, 2.0]],
+    [[7, 2.0], [9, 1.0], [11, 1.0], [12, 2.0]],
     [[8, 2.0], [7, 1.0], [12, 2.0]],
     [[10, 2.0], [12, 2.0]],
 ]
@@ -74,9 +71,6 @@ MINOR_CIRCLES = [
     [[7, 2.0], [5, 1.0], [8, 1.0], [7, 2.0]],
 ]
 
-MINOR_PREPARATIONS.extend(MINOR_RUNS)
-MINOR_PREPARATIONS.extend(MINOR_CIRCLES)
-
 KEYS = [
     [ "C-major", 48, MAJOR_PREPARATIONS, MAJOR_RUNS, MAJOR_MAIN_RUNS, MAJOR_CIRCLES ],
     [ "G-major", 43, MAJOR_PREPARATIONS, MAJOR_RUNS, MAJOR_MAIN_RUNS, MAJOR_CIRCLES ],
@@ -94,18 +88,18 @@ class Generator:
     def add_pause(self, length = 1):
         self.current_time = self.current_time + length
 
-    def add_note(self, note, length = 1):
-        self.midi_file.addNote(0, 0, note, self.current_time, length, 100)
-        self.add_pause(length)
-
-    def add_pattern(self, base, pattern):
-        for item in pattern:
-            self.add_note(base + item[0], item[1])
-
     def add_chord(self, base, notes, length = 1):
         for note in notes:
             self.midi_file.addNote(0, 0, base + note, self.current_time, length, 100)
         self.add_pause(length)
+
+    def add_note(self, note, length = 1):
+        self.add_chord(note, [0], length)
+
+    def add_pattern(self, base, pattern):
+        for item in pattern:
+            length = item[len(item) - 1]
+            self.add_chord(base, item[0 : len(item) - 1], length)
 
     def write(self, filename):
         output_file = open(filename, 'wb')
