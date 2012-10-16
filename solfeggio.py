@@ -90,7 +90,7 @@ class Generator:
 
     def add_chord(self, base, notes, length = 1):
         for note in notes:
-            self.midi_file.addNote(0, 0, base + note, self.current_time, length, 100)
+            self.midi_file.addNote(0, 0, base + note, self.current_time, length, int(100 / len(notes)))
         self.add_pause(length)
 
     def add_note(self, note, length = 1):
