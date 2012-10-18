@@ -79,6 +79,7 @@ MINOR = [ MINOR_RUNS, MINOR_MAIN_RUNS, MINOR_CIRCLES, MINOR_MAIN_CHORDS ]
 KEYS = [
     [ "C-major", 48, MAJOR ],
     [ "G-major", 43, MAJOR ],
+    [ "G-minor", 43, MINOR ],
     [ "A-minor", 45, MINOR ],
 ]
 
@@ -110,7 +111,9 @@ class Generator:
         self.midi_file.writeFile(output_file)
         output_file.close()
 
-def AddPreparations(generator, base, tonality, repeats = 3):
+def GeneratePreparations(base, tonality, filename, repeats = 3):
+    generator = Generator()
+
     [patterns, main_patterns, circles, main_chords] = tonality
 
     generator.add_chord(base, main_chords[0][1], 4)
@@ -152,14 +155,10 @@ def AddPreparations(generator, base, tonality, repeats = 3):
             else:
                 generator.add_pause(4)
 
-    generator.add_pause(2)
+    generator.write(filename)
 
-    generator.add_pause(8)
-
-def GenerateRandomRuns(base, tonality, patterns, filename, tasks = 500):
+def GenerateRandomRuns(base, patterns, filename, tasks = 500):
     generator = Generator()
-
-    AddPreparations(generator, base, tonality)
 
     for i in range(0, tasks):
         pattern = random.choice(patterns)
@@ -176,10 +175,8 @@ def GenerateRandomRuns(base, tonality, patterns, filename, tasks = 500):
 
     generator.write(filename)
 
-def GenerateRandomSequences(base, tonality, patterns, filename, length, pause = 1, tasks = 500):
+def GenerateRandomSequences(base, patterns, filename, length, pause = 1, tasks = 500):
     generator = Generator()
-
-    AddPreparations(generator, base, tonality)
 
     for i in range(0, tasks):
         chosen_patterns = [random.choice(patterns) for i in range(0, length)]
@@ -198,10 +195,8 @@ def GenerateRandomSequences(base, tonality, patterns, filename, length, pause = 
 
     generator.write(filename)
 
-def GenerateSingRandomIntervals(base, tonality, patterns, filename, tasks = 200, repeats = 10):
+def GenerateSingRandomIntervals(base, patterns, filename, tasks = 200, repeats = 10):
     generator = Generator()
-
-    AddPreparations(generator, base, tonality)
 
     for i in range(0, tasks):
         sampled_patterns = random.sample(patterns, 2)
@@ -222,10 +217,8 @@ def GenerateSingRandomIntervals(base, tonality, patterns, filename, tasks = 200,
 
     generator.write(filename)
 
-def GenerateFindRandomHarmonicIntervals(base, tonality, patterns, filename, tasks = 200, repeats = 3):
+def GenerateFindRandomHarmonicIntervals(base, patterns, filename, tasks = 200, repeats = 3):
     generator = Generator(80)
-
-    AddPreparations(generator, base, tonality)
 
     for i in range(0, tasks):
         sampled_patterns = random.sample(patterns, 2)
@@ -242,25 +235,23 @@ def GenerateFindRandomHarmonicIntervals(base, tonality, patterns, filename, task
         generator.add_pause(2)
 
         for pattern in sampled_patterns:
-            generator.add_pattern(base, pattern[0:1])
-            generator.add_pause(1)
+            generator.add_chord(base, [ pattern[0][0] ], 2)
+
+        generator.add_pause(1)
+
+        for pattern in reversed(sampled_patterns):
+            generator.add_chord(base, [ pattern[0][0] ], 2)
 
         generator.add_pause(2)
 
-        for pattern in reversed(sampled_patterns):
-            generator.add_pattern(base, pattern[0:1])
-            generator.add_pause(1)
+        for j in range(0, repeats):
+            generator.add_chord(base, notes, 4)
 
         generator.add_pause(2)
 
         for pattern in sampled_patterns:
             generator.add_pattern(base, pattern)
             generator.add_pause(1)
-
-        generator.add_pause(2)
-
-        for j in range(0, repeats):
-            generator.add_chord(base, notes, 4)
 
         generator.add_pause(4)
 
@@ -279,10 +270,8 @@ def FindPattern(patterns, note):
 
     return None
 
-def GenerateFindChordsBassAndRoot(base, tonality, chords, patterns, filename, tasks = 400, repeats = 3):
+def GenerateFindChordsBassAndRoot(base, chords, patterns, filename, tasks = 400, repeats = 3):
     generator = Generator(80)
-
-    AddPreparations(generator, base, tonality)
 
     for i in range(0, tasks):
         chord = random.choice(chords)
@@ -291,7 +280,7 @@ def GenerateFindChordsBassAndRoot(base, tonality, chords, patterns, filename, ta
             generator.add_chord(base, chord[1], 2)
             generator.add_pause(1)
 
-            if j == repeats - 1:
+            if j == 0:
                 [delta, pattern] = FindPattern(patterns, chord[0])
                 generator.add_pattern(base + delta, pattern)
                 generator.add_pause(1)
@@ -301,8 +290,6 @@ def GenerateFindChordsBassAndRoot(base, tonality, chords, patterns, filename, ta
                 generator.add_pause(1)
             else:
                 generator.add_chord(base, [ chord[0] ], 2)
-                generator.add_pause(1)
-
                 generator.add_chord(base, [ chord[1][0] ], 2)
                 generator.add_pause(1)
 
@@ -316,43 +303,46 @@ for key in KEYS:
 
     track = 1
 
-    GenerateRandomRuns(base, tonality, patterns, name + ("_%02d_runs_random.mid" % track))
-    track = track + 1
-    GenerateRandomSequences(base, tonality, patterns, name + ("_%02d_sequences_random_2.mid" % track), 2)
-    track = track + 1
-    GenerateRandomSequences(base, tonality, patterns, name + ("_%02d_sequences_random_2_nopause.mid" % track), 2, 0)
-    track = track + 1
-    GenerateRandomSequences(base, tonality, patterns, name + ("_%02d_sequences_random_3.mid" % track), 3)
-    track = track + 1
-    GenerateRandomSequences(base, tonality, patterns, name + ("_%02d_sequences_random_3_nopause.mid" % track), 3, 0)
-    track = track + 1
-    GenerateRandomSequences(base, tonality, patterns, name + ("_%02d_sequences_random_5_nopause.mid" % track), 5, 0, 300)
-    track = track + 1
-    GenerateRandomSequences(base, tonality, patterns, name + ("_%02d_sequences_random_10_nopause.mid" % track), 10, 0, 200)
+    GeneratePreparations(base, tonality, name + ("_%02d_preparations.mid" % track))
     track = track + 1
 
-    GenerateSingRandomIntervals(base, tonality, main_patterns, name + ("_%02d_intervals_sing_simple_pt1.mid" % track))
+    GenerateRandomRuns(base, patterns, name + ("_%02d_runs_random.mid" % track))
     track = track + 1
-    GenerateSingRandomIntervals(base, tonality, main_patterns, name + ("_%02d_intervals_sing_simple_pt2.mid" % track))
+    GenerateRandomSequences(base, patterns, name + ("_%02d_sequences_random_2.mid" % track), 2)
     track = track + 1
-
-    GenerateSingRandomIntervals(base, tonality, patterns, name + ("_%02d_intervals_sing_hard_pt1.mid" % track))
+    GenerateRandomSequences(base, patterns, name + ("_%02d_sequences_random_2_nopause.mid" % track), 2, 0)
     track = track + 1
-    GenerateSingRandomIntervals(base, tonality, patterns, name + ("_%02d_intervals_sing_hard_pt2.mid" % track))
+    GenerateRandomSequences(base, patterns, name + ("_%02d_sequences_random_3.mid" % track), 3)
     track = track + 1
-
-    GenerateFindRandomHarmonicIntervals(base, tonality, main_patterns, name + ("_%02d_harmonic_intervals_simple_find_pt1.mid" % track))
+    GenerateRandomSequences(base, patterns, name + ("_%02d_sequences_random_3_nopause.mid" % track), 3, 0)
     track = track + 1
-    GenerateFindRandomHarmonicIntervals(base, tonality, main_patterns, name + ("_%02d_harmonic_intervals_simple_find_pt2.mid" % track))
+    GenerateRandomSequences(base, patterns, name + ("_%02d_sequences_random_5_nopause.mid" % track), 5, 0, 300)
     track = track + 1
-
-    GenerateFindRandomHarmonicIntervals(base, tonality, patterns, name + ("_%02d_harmonic_intervals_hard_find_pt1.mid" % track))
-    track = track + 1
-    GenerateFindRandomHarmonicIntervals(base, tonality, patterns, name + ("_%02d_harmonic_intervals_hard_find_pt2.mid" % track))
+    GenerateRandomSequences(base, patterns, name + ("_%02d_sequences_random_10_nopause.mid" % track), 10, 0, 200)
     track = track + 1
 
-    GenerateFindChordsBassAndRoot(base, tonality, main_chords, patterns, name + ("_%02d_find_main_chords_bass_and_root_pt1.mid" % track))
+    GenerateSingRandomIntervals(base, main_patterns, name + ("_%02d_intervals_sing_simple_pt1.mid" % track))
+    track = track + 1
+    GenerateSingRandomIntervals(base, main_patterns, name + ("_%02d_intervals_sing_simple_pt2.mid" % track))
     track = track + 1
 
-    GenerateFindChordsBassAndRoot(base, tonality, main_chords, patterns, name + ("_%02d_find_main_chords_bass_and_root_pt2.mid" % track))
+    GenerateSingRandomIntervals(base, patterns, name + ("_%02d_intervals_sing_hard_pt1.mid" % track))
+    track = track + 1
+    GenerateSingRandomIntervals(base, patterns, name + ("_%02d_intervals_sing_hard_pt2.mid" % track))
+    track = track + 1
+
+    GenerateFindRandomHarmonicIntervals(base, main_patterns, name + ("_%02d_harmonic_intervals_simple_find_pt1.mid" % track))
+    track = track + 1
+    GenerateFindRandomHarmonicIntervals(base, main_patterns, name + ("_%02d_harmonic_intervals_simple_find_pt2.mid" % track))
+    track = track + 1
+
+    GenerateFindRandomHarmonicIntervals(base, patterns, name + ("_%02d_harmonic_intervals_hard_find_pt1.mid" % track))
+    track = track + 1
+    GenerateFindRandomHarmonicIntervals(base, patterns, name + ("_%02d_harmonic_intervals_hard_find_pt2.mid" % track))
+    track = track + 1
+
+    GenerateFindChordsBassAndRoot(base, main_chords, patterns, name + ("_%02d_find_main_chords_bass_and_root_pt1.mid" % track))
+    track = track + 1
+
+    GenerateFindChordsBassAndRoot(base, main_chords, patterns, name + ("_%02d_find_main_chords_bass_and_root_pt2.mid" % track))
     track = track + 1
