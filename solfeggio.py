@@ -195,11 +195,11 @@ def GenerateRandomSequences(base, patterns, filename, length, pause = 1, tasks =
 
     generator.write(filename)
 
-def GenerateSingRandomIntervals(base, patterns, filename, tasks = 200, repeats = 10):
+def GenerateSingRandomMelodies(base, patterns, filename, notes = 2, tasks = 200, repeats = 10):
     generator = Generator()
 
     for i in range(0, tasks):
-        sampled_patterns = random.sample(patterns, 2)
+        sampled_patterns = random.sample(patterns, notes)
 
         for pattern in sampled_patterns:
             generator.add_pattern(base, pattern)
@@ -321,14 +321,17 @@ for key in KEYS:
     GenerateRandomSequences(base, patterns, name + ("_%02d_sequences_random_10_nopause.mid" % track), 10, 0, 200)
     track = track + 1
 
-    GenerateSingRandomIntervals(base, main_patterns, name + ("_%02d_intervals_sing_simple_pt1.mid" % track))
-    track = track + 1
-    GenerateSingRandomIntervals(base, main_patterns, name + ("_%02d_intervals_sing_simple_pt2.mid" % track))
+    GenerateSingRandomMelodies(base, main_patterns, name + ("_%02d_intervals_sing_simple.mid" % track))
     track = track + 1
 
-    GenerateSingRandomIntervals(base, patterns, name + ("_%02d_intervals_sing_hard_pt1.mid" % track))
+    GenerateSingRandomMelodies(base, patterns, name + ("_%02d_intervals_sing_hard_pt1.mid" % track))
     track = track + 1
-    GenerateSingRandomIntervals(base, patterns, name + ("_%02d_intervals_sing_hard_pt2.mid" % track))
+    GenerateSingRandomMelodies(base, patterns, name + ("_%02d_intervals_sing_hard_pt2.mid" % track))
+    track = track + 1
+
+    GenerateSingRandomMelodies(base, patterns, name + ("_%02d_melodies_sing_5_notes_pt1.mid" % track), 5, 100)
+    track = track + 1
+    GenerateSingRandomMelodies(base, patterns, name + ("_%02d_melodies_sing_5_notes_pt2.mid" % track), 5, 100)
     track = track + 1
 
     GenerateFindRandomHarmonicIntervals(base, main_patterns, name + ("_%02d_harmonic_intervals_simple_find_pt1.mid" % track))
